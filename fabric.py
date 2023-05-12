@@ -48,7 +48,7 @@ class LLM_Dataset(Dataset):
 def main():
     L.seed_everything(42)
 
-    fabric = L.Fabric(num_nodes=1, devices=4, precision="16-mixed", strategy='deepspeed_stage_3')
+    fabric = L.Fabric(num_nodes=1, devices=4, precision="bf16-mixed", strategy='deepspeed_stage_3')
 
     max_length = 256
     model_name = 'mosaicml/mpt-7b-instruct'
@@ -65,8 +65,8 @@ def main():
             dataset = json.load(f)
 
     train_data, val_data = train_test_split(dataset, test_size=0.2)
-    train_dataset = LLM_Dataset(train_data, tokenizer, max_length)
-    val_dataset = LLM_Dataset(val_data, tokenizer, max_length)
+    train_dataset = LLM_Dataset(train_data, tokenizer)
+    val_dataset = LLM_Dataset(val_data, tokenizer)
 
     train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=2)
     val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=2)
@@ -77,8 +77,8 @@ def main():
 
     model = AutoModelForCausalLM.from_pretrained(model_name, 
                                                 config=config, 
-                                                torch_dtype=torch.float16,
-                                                low_cpu_mem_usage=True,
+                                                torch_dtype=torch.bfloat16,
+                                                # low_cpu_mem_usage=True,
                                                 trust_remote_code=True)
 
     # Optimizer
